@@ -243,13 +243,14 @@ Camera Frame → Vision (VNImageRequestHandler) → Core ML (YOLO-World.mlmodel)
 
 ## Prerequisites
 
-
 Requirements:
+
 - Python (recommended: 3.9 or later)
 - Ultralytics YOLO-World
 - coremltools
 
 Install example:
+
 ```bash
 pip install ultralytics coremltools torch torchvision
 ```
