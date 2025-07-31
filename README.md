@@ -1,5 +1,24 @@
 # YOLO‑World iOS 組み込みガイド
 
+## サンプルスクリプト解説
+
+### makeCustomClassCoreML.py
+
+指定したクラスラベルで YOLO-World モデルを Core ML 形式（.mlpackage）に変換するスクリプトです。
+
+- モデルの読み込み
+- クラスラベルの固定（オープン語彙機能は使わない）
+- 出力ファイル名の指定（任意）
+- Core ML 形式でエクスポート
+
+### testYoloWorld.py
+
+YOLO-World モデルを使って画像内の物体検出を行い、バウンディングボックス付き画像とテキスト結果を保存するスクリプトです。
+
+- モデルの読み込みとクラスラベルの固定
+- 画像ファイルの予測
+- 結果画像・テキストの自動保存
+
 > **注記** : ここで紹介する手順では **Core ML へエクスポートする際にクラスラベルを固定** します。そのため Core ML 化されたモデルでは、YOLO‑World 本来の **オープン語彙（自然言語プロンプト）機能は利用できません**。
 
 ---
@@ -26,6 +45,19 @@ YOLO‑World は YOLO 系の高速物体検出と **視覚 + 言語エンコー�
 
 > Core ML は動的な文字列入力をサポートしていないため、エクスポート時にクラスを `model.set_classes([...])` で固定します。
 
+---
+
+## 付属 Python スクリプトの解説
+
+- `makeCustomClassCoreML.py`：
+
+  - YOLO-World モデルを指定クラスで固定し、Core ML 形式（.mlpackage）にエクスポートするスクリプトです。
+  - 出力ファイル名もカスタマイズ可能です。
+
+- `testYoloWorld.py`：
+  - YOLO-World モデルで画像を推論し、検出結果（バウンディングボックス付き画像とテキスト）を保存するサンプルです。
+  - 保存先は `runs/detect/predict` フォルダになります。
+
 ## アーキテクチャ
 
 ```
@@ -40,19 +72,16 @@ YOLO‑World は YOLO 系の高速物体検出と **視覚 + 言語エンコー�
 
 ## 前提条件
 
-| ステージ    | バージョン / ツール               |
-| ----------- | --------------------------------- |
-| Python      | 3.9 – 3.12                        |
-| PyTorch     | ≥ 2.2                             |
-| Ultralytics | ≥ 8.1 (`pip install ultralytics`) |
-| coremltools | ≥ 7.0                             |
-| Xcode       | 15+                               |
-| iOS         | 17+ (Neural Engine 推奨)          |
+必要なもの：
+
+- Python（推奨: 3.9 以上）
+- Ultralytics YOLO-World
+- coremltools
+
+インストール例：
 
 ```bash
-python -m venv venv && source venv/bin/activate
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-pip install ultralytics coremltools
+pip install ultralytics coremltools torch torchvision
 ```
 
 ## データセット準備
@@ -163,6 +192,17 @@ YOLO‑World は Apache 2.0、 本ガイドは MIT License です。
 
 # YOLO-World iOS Integration Guide (English)
 
+## Sample Python Scripts
+
+- `makeCustomClassCoreML.py`:
+
+  - Converts a YOLO-World model to Core ML format (.mlpackage) with a fixed set of class labels.
+  - Allows custom output filename for the exported model.
+
+- `testYoloWorld.py`:
+  - Runs inference on an image using YOLO-World and saves the results (image with bounding boxes and text output).
+  - Results are saved in the `runs/detect/predict` folder.
+
 > **Note** : This workflow **fixes class labels at export time**. The original "open-vocabulary" capability of YOLO-World is **not preserved** once the model is converted to Core ML.
 
 ---
@@ -203,20 +243,15 @@ Camera Frame → Vision (VNImageRequestHandler) → Core ML (YOLO-World.mlmodel)
 
 ## Prerequisites
 
-| Host Stage  | Version / Tool                           |
-| ----------- | ---------------------------------------- |
-| Python      | 3.9 – 3.12                               |
-| PyTorch     | ≥ 2.2                                    |
-| Ultralytics | ≥ 8.1 (`pip install ultralytics`)        |
-| coremltools | ≥ 7.0                                    |
-| Xcode       | 15 or later                              |
-| iOS         | 17+ (Neural Engine strongly recommended) |
 
+Requirements:
+- Python (recommended: 3.9 or later)
+- Ultralytics YOLO-World
+- coremltools
+
+Install example:
 ```bash
-# minimal environment setup
-python -m venv venv && source venv/bin/activate
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-pip install ultralytics coremltools
+pip install ultralytics coremltools torch torchvision
 ```
 
 ## Dataset Preparation
