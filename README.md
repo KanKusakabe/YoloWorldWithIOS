@@ -14,7 +14,7 @@
 6. [Core ML へのエクスポート](#core-ml-へのエクスポート)
 7. [Xcode への組み込み](#xcode-への組み込み)
 8. [Vision を用いた推論](#vision-を用いた推論)
-9. [パフォーマンス向上 Tips](#パフォーマンス向上tips)
+9. [パフォーマンス向上  Tips](#パフォーマンス向上tips)
 10. [トラブルシューティング](#トラブルシューティング)
 11. [ライセンス](#ライセンス)
 
@@ -40,14 +40,14 @@ YOLO‑World は YOLO 系の高速物体検出と **視覚 + 言語エンコー�
 
 ## 前提条件
 
-| ステージ        | バージョン / ツール                       |
+| ステージ    | バージョン / ツール               |
 | ----------- | --------------------------------- |
 | Python      | 3.9 – 3.12                        |
 | PyTorch     | ≥ 2.2                             |
 | Ultralytics | ≥ 8.1 (`pip install ultralytics`) |
 | coremltools | ≥ 7.0                             |
 | Xcode       | 15+                               |
-| iOS         | 17+ (Neural Engine 推奨)            |
+| iOS         | 17+ (Neural Engine 推奨)          |
 
 ```bash
 python -m venv venv && source venv/bin/activate
@@ -64,7 +64,7 @@ pip install ultralytics coremltools
 ```yaml
 path: .
 train: images/train
-val:   images/val
+val: images/val
 names:
   0: cup
   1: keyboard
@@ -85,14 +85,27 @@ model.save("custom_yoloworld.pt")
 
 ```python
 from ultralytics import YOLO
+
+# 1) モデル読み込み
 model = YOLO("custom_yoloworld.pt")
-model.export(format="coreml", nms=True, int8=False)
+
+# 2) 固定したいクラスをリストで指定
+classes = ["cup", "keyboard", "mouse", "helmet"]
+model.set_classes(classes)
+
+# 3) 出力ファイル名を指定（任意）
+file_name = f"custom_yoloworld_{'_'.join(classes)}.mlpackage"
+
+# 4) Core ML形式でエクスポート
+mlpackage_path = model.export(format="coreml", nms=True, int8=False, filename=file_name)
+print(f"✅ Core ML package saved to: {mlpackage_path}")
 ```
 
 - `nms=True` で NMS をモデル内に組み込み
 - `int8=True` で軽量化も可能
+- `filename` で出力ファイル名を指定可能
 
-`YOLO‑World.mlpackage` を Xcode にドラッグ & ドロップすれば準備完了です。
+作成された `.mlpackage` を Xcode にドラッグ & ドロップすれば準備完了です。
 
 ## Xcode への組み込み
 
@@ -128,13 +141,13 @@ class Detector {
 }
 ```
 
-## パフォーマンス向上 Tips
+## パフォーマンス向上  Tips
 
-| Tip                 | 効果                                  |
-| ------------------- | ----------------------------------- |
-| `yolov8s-world` を使用 | A17/M2 端末で 20–40 FPS                |
-| `int8=True` で書き出し   | 容量 40 % 減、FPS 若干向上                  |
-| `computeUnits` 切替   | `.all`, `.cpuAndNeuralEngine` などテスト |
+| Tip                    | 効果                                     |
+| ---------------------- | ---------------------------------------- |
+| `yolov8s-world` を使用 | A17/M2 端末で 20–40 FPS                  |
+| `int8=True` で書き出し | 容量 40 % 減、FPS 若干向上               |
+| `computeUnits` 切替    | `.all`, `.cpuAndNeuralEngine` などテスト |
 
 ## トラブルシューティング
 
@@ -212,9 +225,9 @@ pip install ultralytics coremltools
 2. Label them in **YOLO format** (`images/train`, `labels/train` etc.). Tools: [Roboflow](https://roboflow.com/), [CVAT](https://github.com/opencv/cvat), labelImg.
 3. Create a `data.yaml`:
    ```yaml
-   path: .  # workspace root
+   path: . # workspace root
    train: images/train
-   val:   images/val
+   val: images/val
    names:
      0: cup
      1: keyboard
@@ -241,20 +254,33 @@ model.save("yoloworld_custom.pt")
 
 ```python
 from ultralytics import YOLO
+
+# 1. Load model
 model = YOLO("yoloworld_custom.pt")
-model.export(format="coreml", nms=True, int8=False)  # outputs YOLO-World.mlpackage
+
+# 2. Set classes to freeze
+classes = ["cup", "keyboard", "mouse", "helmet"]
+model.set_classes(classes)
+
+# 3. Specify output filename (optional)
+file_name = f"yoloworld_custom_{'_'.join(classes)}.mlpackage"
+
+# 4. Export to Core ML
+mlpackage_path = model.export(format="coreml", nms=True, int8=False, filename=file_name)
+print(f"✅ Core ML package saved to: {mlpackage_path}")
 ```
 
 - `nms=True` embeds Non-Max Suppression into the model.
 - Set `int8=True` for smaller size at some accuracy cost.
+- Use `filename` to specify the output file name.
 
-The resulting `` is ready for Xcode (drag-and-drop into the project navigator).
+The resulting `.mlpackage` is ready for Xcode (drag-and-drop into the project navigator).
 
 ## Integrating the Model into Xcode
 
-1. **Add the model**: Drag `YOLO-World.mlpackage` into Xcode → *Copy resources if needed*.
+1. **Add the model**: Drag `YOLO-World.mlpackage` into Xcode → _Copy resources if needed_.
 2. **Enable fast compute**:
-   - Project → *Signing & Capabilities* → *App Sandbox* → *No extra entitlement required* – Core ML/Vision is sandbox-safe.
+   - Project → _Signing & Capabilities_ → _App Sandbox_ → _No extra entitlement required_ – Core ML/Vision is sandbox-safe.
 3. **Update Info.plist** – add `NSCameraUsageDescription`.
 4. **Import Vision in Swift code**:
    ```swift
@@ -308,4 +334,3 @@ Use `VNRecognizedObjectObservation.boundingBox` to draw overlays in SwiftUI or U
 ## License
 
 YOLO-World is released under Apache 2.0. This guide is released under the MIT License.
-
